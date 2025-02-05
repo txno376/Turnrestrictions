@@ -21,14 +21,14 @@ namespace Turnrestrictions
         private static PresetIData presetIData;
         private static int countnum = 0;
         private static ConfigEntry<int> 跳转显示;
-        private static ConfigEntry<int> 地图大小;
+        private static ConfigEntry<string> 地图大小;
         private static ConfigEntry<int> 物品添加;
         private static Harmony harmony;
         void Awake()
         {
             base.Logger.LogError("Turnrestrictions");
             Mainturn.跳转显示 = base.Config.Bind<int>("AcensionMod", "跳转显示", 1, "默认 1 开启 0 关闭");
-            Mainturn.地图大小 = base.Config.Bind<int>("AcensionMod", "地图大小", 1, "地图大小，填写1、2、3、4");
+            Mainturn.地图大小 = base.Config.Bind<string>("AcensionMod", "地图大小", "\t1\t小\tSmall\t6\t6\t5\t0,16,4,3\t0.9,1,1.1\t0,4,4,6\t0,3,1,2,16\t0,6,6,6,3\t40\t40\t8", "地图大小，填写1关闭");
             Mainturn.物品添加 = base.Config.Bind<int>("AcensionMod", "物品添加", 1, "物品添加默认 1 开启 0 关闭"); 
             bool flag = Mainturn.跳转显示.Value == 1;
             if (flag)
@@ -54,27 +54,15 @@ namespace Turnrestrictions
             //};
             //GameTimeProcessComponent.Update
         }
-        [HarmonyPrefix]
+        [HarmonyPostfix]
         [HarmonyPatch(typeof(儿及), "丁上一")]
-        public static bool MapSize(ref MapSizeLevel 一)
+        public static void MapSize(ref DRMapSizeConfig __result)
         {
-            switch (Mainturn.地图大小.Value)
+            if (Mainturn.地图大小.Value.Length > 2) 
             {
-                case 1:
-                    一 = MapSizeLevel.Small;
-                    break;
-                case 2:
-                    一 = MapSizeLevel.Medium;
-                    break;
-                case 3:
-                    一 = MapSizeLevel.Large;
-                    break;
-                case 4:
-                    一 = MapSizeLevel.Super;
-                    break;
+                __result.ParseDataRow(Mainturn.地图大小.Value, new object());
             }
-            return true;
-            //FormSelectTheWorld.OnOpen
+            //    //FormSelectTheWorld.OnOpen
         }
         [HarmonyPrefix]
         [HarmonyPatch(typeof(匕十), "丁乞九")]
