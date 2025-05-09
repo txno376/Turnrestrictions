@@ -11,25 +11,21 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
+using UnityGameFramework.Runtime;
 
 namespace Turnrestrictions
 {
-    [BepInPlugin("Turnrestrictions", "Acension", "0.9.25")]
+    [BepInPlugin("Turnrestrictions", "Acension", "0.11.37")]
     public class Mainturn : BaseUnityPlugin
     {
-        private static PresetIData presetIData;
-        private static int countnum = 0;
         private static ConfigEntry<int> 跳转显示;
-        private static ConfigEntry<string> 地图大小;
         private static ConfigEntry<int> 物品添加;
         private static Harmony harmony;
         void Awake()
         {
             base.Logger.LogError("Turnrestrictions");
             Mainturn.跳转显示 = base.Config.Bind<int>("AcensionMod", "跳转显示", 1, "默认 1 开启 0 关闭");
-            Mainturn.地图大小 = base.Config.Bind<string>("AcensionMod", "地图大小", "\t1\t小\tSmall\t6\t6\t5\t0,16,4,3\t0.9,1,1.1\t0,4,4,6\t0,3,1,2,16\t0,6,6,6,3\t40\t40\t8", "地图大小，填写1关闭");
-            Mainturn.物品添加 = base.Config.Bind<int>("AcensionMod", "物品添加", 1, "物品添加默认 1 开启 0 关闭"); 
+            Mainturn.物品添加 = base.Config.Bind<int>("AcensionMod", "物品添加", 1, "默认 1 开启 0 关闭"); 
             bool flag = Mainturn.跳转显示.Value == 1;
             if (flag)
             {
@@ -43,138 +39,115 @@ namespace Turnrestrictions
             base.Logger.LogError("Turnrestrictions OK！");
         }
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(儿口), "丁丈夕")]
-        public static bool End()
+        [HarmonyPatch(typeof(几又), "厂刁厂")]
+        public static bool SetItem2(ref 几又 __instance)
         {
-            return false;
-            //刁义 乙 = new 刁义
-            //{
-            //    入士勺 = 乙一.FormGameEnd,
-            //    入士广 = 一
-            //};
-            //GameTimeProcessComponent.Update
-        }
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(儿及), "丁上一")]
-        public static void MapSize(ref DRMapSizeConfig __result)
-        {
-            if (Mainturn.地图大小.Value.Length > 2) 
+            //SubUIPresetEditorCharacter.OnClickAddANewPreset  PresetItemYaml 一
+            List<TheoryMods> theoryMods = presetIData.TheoryMods;
+            DataTableComponent dataTableComponent = UnityGameFramework.Runtime.GameEntry.GetComponent<DataTableComponent>();
+            foreach (TheoryMods theoryMods2 in theoryMods)
             {
-                __result.ParseDataRow(Mainturn.地图大小.Value, new object());
-            }
-            //    //FormSelectTheWorld.OnOpen
-        }
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(匕十), "丁乞九")]
-        public static bool SetItem3(ref PresetItemYaml 一)
-        {
-            //SubUIInitialMember.OnOpen        PresetItemYaml 一
-            countnum = 1;
-            if (presetIData == null)
-            {
-                GetPIDIs();
-            }
-            if (presetIData.JadeSlipInfos != null)
-            {
-                foreach (PresetItemJadeSlipInfo t in presetIData.JadeSlipInfos)
+                string dataRowString = string.Format("\t{0}\t魅力+5\t\tTheory_Dan\t1\t1\t0\t0\t1\tFalse\t255\t0\t1\t0\t\t\t{1}\t\t{2}\t{3}\t\t{4}\t\t2\t\t\t\t\t", new object[]
                 {
-                    一.JadeSlipList.Add(t);
-                }
+                    theoryMods2.id,
+                    theoryMods2.count,
+                    theoryMods2.indexs,
+                    theoryMods2.type,
+                    theoryMods2.value
+                });
+                dataTableComponent.GetDataTable<DRTheory>().AddDataRow(dataRowString, new object());
             }
-            if (presetIData.DanFormulaInfos != null)
+
+            if (Mainturn.物品添加.Value == 1)
             {
-                foreach (PresetItemDanFormulaInfo t in presetIData.DanFormulaInfos)
+                List<List<PresetItemData>> list = (List<List<PresetItemData>>)Traverse.Create(__instance).Field("入己么").GetValue();
+                PresetIData pd = presetIData;
+                if (pd.JadeSlipInfos != null)
                 {
-                    一.DanFormulaList.Add(t);
+                    foreach (PresetItemJadeSlipInfo t in pd.JadeSlipInfos)
+                    {
+                        list[(int)t.ItemType].Add(t);
+                    }
                 }
-            }
-            if (presetIData.EquipFormulaInfos != null)
-            {
-                foreach (PresetItemEquipFormulaInfo t in presetIData.EquipFormulaInfos)
+                if (pd.DanFormulaInfos != null)
                 {
-                    一.EquipFormulaList.Add(t);
+                    foreach (PresetItemDanFormulaInfo t in pd.DanFormulaInfos)
+                    {
+                        list[(int)t.ItemType].Add(t);
+                    }
                 }
+                if (pd.EquipFormulaInfos != null)
+                {
+                    foreach (PresetItemEquipFormulaInfo t in pd.EquipFormulaInfos)
+                    {
+                        list[(int)t.ItemType].Add(t);
+                    }
+                }
+                Traverse.Create(__instance).Field("入己么").SetValue(list); 
+                Console.WriteLine("---------厂刁厂----------");
             }
-            Console.WriteLine("---------丁乞九----------");
             return true;
         }
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(入丸), "丁于三")]
+        [HarmonyPatch(typeof(匕义), "厂厂弓")]
         public static bool SetItem(ref SectData 一)
         {
+            //		SectData.ClearIncomeAndConsumeInfo  (SectData 一)\nGameInitResType key = GameInitResType.Award;
             if (Mainturn.物品添加.Value == 1)
             {
-                if (Mainturn.countnum > 0)
+                PresetIData pd = presetIData;
+                if (pd.JadeSlipInfos != null)
                 {
-                    Mainturn.countnum = 0;
-                    if (presetIData.JadeSlipInfos != null)
+                    foreach (PresetItemJadeSlipInfo t in pd.JadeSlipInfos)
                     {
-                        foreach (PresetItemJadeSlipInfo t in presetIData.JadeSlipInfos)
-                        {
-                            ItemData item = ItemJadeSlipInfo.GetEntityByKeyID(t.PresetUniqueID);
-                            SetToItem(item, 一);
-                        }
+                        ItemData item = ItemJadeSlipInfo.GetEntityByKeyID(t.PresetUniqueID);
+                        SetToItem(item, 一, 1);
                     }
-                    if (presetIData.DanFormulaInfos != null)
+                }
+                if (pd.DanFormulaInfos != null)
+                {
+                    foreach (PresetItemDanFormulaInfo t in pd.DanFormulaInfos)
                     {
-                        foreach (PresetItemDanFormulaInfo t in presetIData.DanFormulaInfos)
-                        {
-                            ItemData item = ItemDanFormulaInfo.GetEntityByKeyID(t.PresetUniqueID);
-                            SetToItem(item, 一);
-                        }
+                        ItemData item = ItemDanFormulaInfo.GetEntityByKeyID(t.PresetUniqueID);
+                        ItemData item2 = ItemDanInfo.GetEntityByKeyGroupKey(item.RelationID);
+                        SetToItem(item2, 一, 5);
                     }
-                    if (presetIData.EquipFormulaInfos != null)
+                }
+                if (pd.EquipFormulaInfos != null)
+                {
+                    foreach (PresetItemEquipFormulaInfo t in pd.EquipFormulaInfos)
                     {
-                        foreach (PresetItemEquipFormulaInfo t in presetIData.EquipFormulaInfos)
-                        {
-                            ItemData item = ItemEquipFormulaInfo.GetEntityByKeyID(t.PresetUniqueID);
-                            SetToItem(item, 一);
-                        }
+                        ItemData item = ItemEquipFormulaInfo.GetEntityByKeyID(t.PresetUniqueID);
+                        ItemData item2 = ItemEquipInfo.GetEntityByKeyGroupKey(item.RelationID);
+                        SetToItem(item2, 一, 5);
                     }
                 }
             }
+            Console.WriteLine("---------厂厂弓----------");
             return true;
-            //ConversationLuaHelper.GiveAward
-            //eturn BaseDataCenter<入乙>.Instance.十弓又(entityByKeyID2.Sect, 乙, RecordSourceType.NormalConversation, list, -1);
         }
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(几一), "丁么二")]
-        public static bool SetTheory(ref 几一 __instance)
+        private static PresetIData presetIData 
         {
-            if (Mainturn.物品添加.Value == 1)
+            get 
             {
-                List<TheoryMod> theoryMods = presetIData.TeoryMods;
-                if (TheoryData.CountEntities > 0)
+                if (_presetIData == null)
                 {
-                    return false;
+                    GetPIDIs();
                 }
-                DRTheory[] allDataRows = GameEntry.八刀九.GetDataTable<DRTheory>().GetAllDataRows();
-                foreach (DRTheory 一 in allDataRows)
-                {
-                    TheoryMod theoryMod = theoryMods.FirstOrDefault(drt => drt.id == 一.Id);
-                    if (theoryMod != null)
-                    {
-                        Traverse.Create(一).Property("八凡乙").SetValue(theoryMod.count);
-                        Traverse.Create(一).Property("八凡十").SetValue(theoryMod.indexs);
-                        Traverse.Create(一).Property("八凡七").SetValue(theoryMod.value);
-                    }
-                    __instance.丁么丁(一);
-                }
-                return false;
+                return _presetIData;
             }
-            //ProcedureNewGam.OnEnter
-            return true;
         }
+        private static PresetIData _presetIData = null;
         public static void GetPIDIs()
         {
-            string filePath = @"BepInEx/Json/PresetIData.json";
+            string filePath = @"Json/PresetIData.json";
             string json = File.ReadAllText(filePath);
-            presetIData = JsonConvert.DeserializeObject<PresetIData>(json);
+            _presetIData = JsonConvert.DeserializeObject<PresetIData>(json);
+            
         }
-        public static void SetToItem(ItemData item, SectData 一)
+        public static void SetToItem(ItemData item, SectData 一, int num = 1)
         {
-            一.InventoryChangeItem(item, 1, true, -1, false, RecordSourceType.None, null);
-            Console.WriteLine(item.Index + " " + item.UniqueID + " " + item.Name);
+            一.InventoryChangeItem(item, num, true, -1, false, RecordSourceType.None, null);
         }
     }
 }

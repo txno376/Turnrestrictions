@@ -8,13 +8,14 @@ namespace Turnrestrictions
         public List<PresetItemJadeSlipInfo> JadeSlipInfos { get; set; } //功法
         public List<PresetItemDanFormulaInfo> DanFormulaInfos { get; set; } //丹方
         public List<PresetItemEquipFormulaInfo> EquipFormulaInfos { get; set; } //器方
-        public List<TheoryMod> TeoryMods { get; set; } //天地规则
+        public List<TheoryMods> TheoryMods { get; set; } //天地规则
     }
-    public class TheoryMod
+    public class TheoryMods
     {
         public int id { get; set; }
-        public int[] count { get; set; }
-        public int[] indexs { get; set; }
-        public float[] value { get; set; }
+        public string count { get; set; }
+        public string indexs { get; set; }
+        public string type { get; set; }
+        public string value { get; set; }
     }
 }
